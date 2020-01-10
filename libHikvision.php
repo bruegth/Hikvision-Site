@@ -393,34 +393,24 @@ class hikvisionCCTV
 			$file
 		);
 		$tempFileName = $_dataDirNum.'.'. $_file.'.'. $_startOffset.'.'. $_endOffset.'.'. $_resolution;
-		$pathExtracted = $this->pathJoin( $_cachePath, $tempFileName.'.h264');
-		$pathTranscoded = $this->pathJoin( $_cachePath, $tempFileName.'.mp4');
+		$pathExtracted = $this->pathJoin( $_SERVER["DOCUMENT_ROOT"], $_cachePath, $tempFileName.'.h264');
+		$pathTranscoded = $this->pathJoin( $_SERVER["DOCUMENT_ROOT"], $_cachePath, $tempFileName.'.mp4');
+
+		$extractScript = $this->pathJoin( $_SERVER["DOCUMENT_ROOT"], 'copy.ps1');
 		
 		// If file already exists, return path to it.
 		if( file_exists( $pathTranscoded ))
 			return $pathTranscoded;
 		
-		// Extract raw h264 footage and store in temp file. Avoiding 
-		// pipes to improve performance. Testing showed just piping dd to
-		// ffmpeg was _really_ slow.
-		$fh = fopen( $path, 'rb');
-		if($fh == false)
-			die("Unable to open $path");
-		
-		if( fseek($fh, $_startOffset) === false )
-			die("Unable to seek to position $_startOffset in $path");
-		
-		while(ftell($fh) < $_endOffset)
-		{
-			file_put_contents($pathExtracted, fread($fh, 4096), FILE_APPEND);
-		}
-		fclose($fh);
-		
+		// Extract raw h264 footage and store in temp file.
+		$cmd = 'C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe –ExecutionPolicy Bypass -NoProfile -File '.$extractScript.' '.$path.' '.$pathExtracted.' '.$_startOffset.' '.$_endOffset;
+		Shell_Exec($cmd);
+
 		// Extract footage and pass to avconv. 
 		if( $_resolution != null and $_resolution != "null" )
-			$cmd = 'ffmpeg -i '.$pathExtracted.' -threads auto -s '.$_resolution.' -c:a none '.$pathTranscoded;
+			$cmd = 'C:\xampp\avconv\ffmpeg -i '.$pathExtracted.' -threads auto -s '.$_resolution.' -c:a none '.$pathTranscoded;
 		else
-			$cmd = 'ffmpeg -i '.$pathExtracted.' -threads auto -c:v copy -c:a none '.$pathTranscoded;
+			$cmd = 'C:\xampp\avconv\ffmpeg -i '.$pathExtracted.' -threads auto -c:v copy -c:a none '.$pathTranscoded;
 		system($cmd);
 		
 		// Transcode complete. Remove original file.

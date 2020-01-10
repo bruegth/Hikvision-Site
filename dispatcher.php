@@ -4,13 +4,11 @@
 
 	require_once 'libHikvision.php';
 
-	define("USERNAME", "user");
-	define("PASSWORD", "user");
+	define("USERNAME", "root");
+	define("PASSWORD", "cam1234");
 	define("TMPVIDEOFILES", "streamvideo");
 	$camPaths = array(
-		"/mnt/hikvision/spicam1/info.bin",
-		"/mnt/hikvision/spicam3/info.bin",
-		"/mnt/hikvision/spicam2/info.bin",
+		"D:\info.bin",
 	);
 
 
